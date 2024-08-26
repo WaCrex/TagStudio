@@ -324,37 +324,11 @@ class CliDriver:
 
     def paste_field_from_buffer(self, entry_id) -> None:
         """Merges or adds the Entry Field object in the internal buffer to the Entry."""
-        if self.buffer:
-            # entry: Entry = self.lib.entries[entry_index]
-            # entry = self.lib.get_entry(entry_id)
-            field_id: int = self.lib.get_field_attr(self.buffer, "id")
-            content = self.lib.get_field_attr(self.buffer, "content")
-
-            # NOTE: This code is pretty much identical to the match_conditions code
-            # found in the core. Could this be made generic? Especially for merging Entries.
-            if self.lib.get_field_obj(int(field_id))["type"] == "tag_box":
-                existing_fields: list[int] = self.lib.get_field_index_in_entry(
-                    entry_id, field_id
-                )
-                if existing_fields:
-                    self.lib.update_entry_field(
-                        entry_id, existing_fields[0], content, "append"
-                    )
-                else:
-                    self.lib.add_field_to_entry(entry_id, field_id)
-                    self.lib.update_entry_field(entry_id, -1, content, "append")
-
-            if self.lib.get_field_obj(int(field_id))["type"] in TEXT_FIELDS:
-                if not self.lib.does_field_content_exist(entry_id, field_id, content):
-                    self.lib.add_field_to_entry(entry_id, field_id)
-                    self.lib.update_entry_field(entry_id, -1, content, "replace")
-
-            # existing_fields: list[int] = self.lib.get_field_index_in_entry(entry_index, field_id)
-            # if existing_fields:
-            # 	self.lib.update_entry_field(entry_index, existing_fields[0], content, 'append')
-            # else:
-            # 	self.lib.add_field_to_entry(entry_index, field_id)
-            # 	self.lib.update_entry_field(entry_index, -1, content, 'replace')
+        if not self.buffer:
+            return
+        self.core.update_entry(entry_id,
+            self.lib.get_field_attr(self.buffer, "id"),
+            self.lib.get_field_attr(self.buffer, "content"))
 
     def init_external_preview(self) -> None:
         """Initialized the external preview image file."""

@@ -103,6 +103,28 @@ class TagStudioCore:
     # 	# 	# print("Could not resolve URL.")
     # 	# 	pass
 
+    def update_entry(self, entry_id: int, field_id: str, content: str) -> None:
+        """Updates or adds a field in the entry based on its type.
+
+        Args:
+            entry_id (int): The ID of the entry to update.
+            field_id (str): The ID of the field to update.
+            content (str): The content to set for the field.
+        """
+        field_type = self.lib.get_field_obj(int(field_id))["type"]
+
+        if field_type == "tag_box":
+            if existing_fields := self.lib.get_field_index_in_entry(entry_id, field_id):
+                self.lib.update_entry_field(entry_id, existing_fields[0], content, "append")
+            else:
+                self.lib.add_field_to_entry(entry_id, field_id)
+                self.lib.update_entry_field(entry_id, -1, content, "append")
+
+        elif field_type in TEXT_FIELDS:
+            if not self.lib.does_field_content_exist(entry_id, field_id, content):
+                self.lib.add_field_to_entry(entry_id, field_id)
+                self.lib.update_entry_field(entry_id, -1, content, "replace")
+
     def match_conditions(self, entry_id: int) -> None:
         """Matches defined conditions against a file to add Entry data."""
 
@@ -124,44 +146,7 @@ class TagStudioCore:
                                 for field in fields:
                                     field_id = self.lib.get_field_attr(field, "id")
                                     content = field[field_id]
-
-                                    if (
-                                        self.lib.get_field_obj(int(field_id))["type"]
-                                        == "tag_box"
-                                    ):
-                                        existing_fields: list[int] = (
-                                            self.lib.get_field_index_in_entry(
-                                                entry, field_id
-                                            )
-                                        )
-                                        if existing_fields:
-                                            self.lib.update_entry_field(
-                                                entry_id,
-                                                existing_fields[0],
-                                                content,
-                                                "append",
-                                            )
-                                        else:
-                                            self.lib.add_field_to_entry(
-                                                entry_id, field_id
-                                            )
-                                            self.lib.update_entry_field(
-                                                entry_id, -1, content, "append"
-                                            )
-
-                                    if (
-                                        self.lib.get_field_obj(int(field_id))["type"]
-                                        in TEXT_FIELDS
-                                    ):
-                                        if not self.lib.does_field_content_exist(
-                                            entry_id, field_id, content
-                                        ):
-                                            self.lib.add_field_to_entry(
-                                                entry_id, field_id
-                                            )
-                                            self.lib.update_entry_field(
-                                                entry_id, -1, content, "replace"
-                                            )
+                                    self.update_entry(entry_id, field_id, content)
         except:
             print("Error in match_conditions...")
             # input()
